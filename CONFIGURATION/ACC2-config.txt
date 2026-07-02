@@ -1,0 +1,86 @@
+!
+! ACC2 - Access Switch 2 Configuration
+! Assumption:
+! Fa0/1 = Trunk to DSW1
+! Fa0/2 = Trunk to DSW2
+! Fa0/3-8 = VLAN 40 GUEST
+! Fa0/9-10 = VLAN 99 MANAGEMENT
+! Fa0/11-13 = VLAN 100 SERVERS
+!
+enable
+configure terminal
+hostname ACC2
+no ip domain-lookup
+enable secret class
+banner motd # Unauthorized access prohibited #
+!
+vlan 10
+ name HR
+vlan 20
+ name FINANCE
+vlan 30
+ name IT
+vlan 40
+ name GUEST
+vlan 99
+ name MANAGEMENT
+vlan 100
+ name SERVERS
+
+!
+interface FastEthernet0/1
+ description Trunk_DSW1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 40,99,100
+ no shutdown
+!
+interface FastEthernet0/2
+ description Trunk_DSW2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 40,99,100
+ no shutdown
+!
+interface range FastEthernet0/3 - 8
+ description GUEST_PCs
+ switchport mode access
+ switchport access vlan 40
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation restrict
+ spanning-tree portfast
+ no shutdown
+!
+interface range FastEthernet0/9 - 10
+ description MANAGEMENT_PCs
+ switchport mode access
+ switchport access vlan 99
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation restrict
+ spanning-tree portfast
+ no shutdown
+!
+interface range FastEthernet0/11 - 13
+ description SERVER_Ports
+ switchport mode access
+ switchport access vlan 100
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation restrict
+ spanning-tree portfast
+ no shutdown
+!
+interface Vlan99
+ description ACC2_Management
+ ip address 192.168.10.165 255.255.255.240
+ no shutdown
+!
+ip default-gateway 192.168.10.161
+!
+end
+copy running-config startup-config

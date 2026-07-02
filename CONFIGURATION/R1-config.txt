@@ -1,0 +1,43 @@
+!
+! R1 - Edge Router Configuration
+!
+enable
+configure terminal
+hostname R1
+no ip domain-lookup
+enable secret class
+banner motd # Unauthorized access prohibited #
+!
+interface GigabitEthernet0/0
+ description Link_to_DSW1
+ ip address 10.255.1.1 255.255.255.252
+ ip nat inside
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description Link_to_DSW2
+ ip address 10.255.1.4 255.255.255.252
+ ip nat inside
+ no shutdown
+!
+interface Serial0/0/0
+ description Link_to_ISP
+ ip address 203.0.113.2 255.255.255.252
+ ip nat outside
+ clock rate 64000
+ no shutdown
+!
+access-list 1 permit 192.168.10.0 0.0.0.255
+!
+ip nat inside source list 1 interface Serial0/0/0 overload
+!
+ip route 0.0.0.0 0.0.0.0 203.0.113.1
+!
+router ospf 10
+ router-id 1.1.1.1
+ network 10.255.1.0 0.0.0.3 area 0
+ network 10.255.1.4 0.0.0.3 area 0
+ default-information originate
+!
+end
+copy running-config startup-config

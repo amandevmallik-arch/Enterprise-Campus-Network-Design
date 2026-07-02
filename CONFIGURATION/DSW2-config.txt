@@ -1,0 +1,119 @@
+!
+! DSW2 - Distribution Multilayer Switch 2 Configuration
+!
+enable
+configure terminal
+hostname DSW2
+no ip domain-lookup
+enable secret class
+banner motd # Unauthorized access prohibited #
+!
+ip routing
+!
+vlan 10
+ name HR
+vlan 20
+ name FINANCE
+vlan 30
+ name IT
+vlan 40
+ name GUEST
+vlan 99
+ name MANAGEMENT
+vlan 100
+ name SERVERS
+!
+interface FastEthernet0/1
+ description Trunk_ACC1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,99
+ no shutdown
+!
+interface FastEthernet0/2
+ description Trunk_ACC2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 40,99,100
+ no shutdown
+!
+interface range FastEthernet0/23 - 24
+ description EtherChannel_to_DSW1
+ channel-group 10 mode active
+ no shutdown
+!
+interface Port-channel10
+ description EtherChannel_to_DSW1
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,40,99,100
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description Routed_Link_to_R1
+ no switchport
+ ip address 10.255.1.6 255.255.255.252
+ no shutdown
+!
+interface Vlan10
+ description HR_Gateway
+ ip address 192.168.10.67 255.255.255.224
+ standby 10 ip 192.168.10.65
+ standby 10 priority 90
+ standby 10 preempt
+ no shutdown
+!
+interface Vlan20
+ description FINANCE_Gateway
+ ip address 192.168.10.131 255.255.255.240
+ standby 20 ip 192.168.10.129
+ standby 20 priority 110
+ standby 20 preempt
+ no shutdown
+!
+interface Vlan30
+ description IT_Gateway
+ ip address 192.168.10.99 255.255.255.224
+ standby 30 ip 192.168.10.97
+ standby 30 priority 90
+ standby 30 preempt
+ no shutdown
+!
+interface Vlan40
+ description GUEST_Gateway
+ ip address 192.168.10.3 255.255.255.192
+ standby 40 ip 192.168.10.1
+ standby 40 priority 110
+ standby 40 preempt
+ ip access-group GUEST_RESTRICT in
+ no shutdown
+!
+interface Vlan99
+ description MANAGEMENT_Gateway
+ ip address 192.168.10.163 255.255.255.240
+ standby 99 ip 192.168.10.161
+ standby 99 priority 90
+ standby 99 preempt
+ no shutdown
+!
+interface Vlan100
+ description SERVERS_Gateway
+ ip address 192.168.10.147 255.255.255.240
+ standby 100 ip 192.168.10.145
+ standby 100 priority 90
+ standby 100 preempt
+ no shutdown
+!
+spanning-tree vlan 20,40 root primary
+spanning-tree vlan 10,30,99,100 root secondary
+!
+ip access-list extended GUEST_RESTRICT
+ deny ip 192.168.10.0 0.0.0.63 192.168.10.0 0.0.0.255
+ permit ip 192.168.10.0 0.0.0.63 any
+!
+router ospf 10
+ router-id 3.3.3.3
+ network 10.255.1.4 0.0.0.3 area 0
+ network 192.168.10.0 0.0.0.255 area 0
+ !
+end
+copy running-config startup-config
